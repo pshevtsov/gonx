@@ -35,7 +35,7 @@ func (entry *Entry) Fields() Fields {
 func (entry *Entry) Field(name string) (value string, err error) {
 	value, ok := entry.fields[name]
 	if !ok {
-		err = fmt.Errorf("Field '%v' does not found in record %+v", name, *entry)
+		err = fmt.Errorf("field '%v' does not found in record %+v", name, *entry)
 	}
 	return
 }

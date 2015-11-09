@@ -1,4 +1,5 @@
 language: go
+sudo: false
 go:
   - 1.1
   - 1.2
@@ -6,4 +7,6 @@ go:
   - 1.4
   - tip
 install: make deps
-script: go test -v -bench .
+script:
+  - go test -v -bench .
+  - make examples

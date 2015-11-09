@@ -40,7 +40,6 @@ func (parser *Parser) ParseString(line string) (entry *Entry, err error) {
 		}
 		entry.SetField(name, fields[i])
 	}
-	entry.SetField("raw_line", line)
 	return
 }
 

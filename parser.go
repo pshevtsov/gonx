@@ -8,6 +8,11 @@ import (
 	"strings"
 )
 
+// StringParser is the interface that wraps the ParseString method.
+type StringParser interface {
+	ParseString(line string) (entry *Entry, err error)
+}
+
 // Log record parser. Use specific constructors to initialize it.
 type Parser struct {
 	format string
@@ -47,7 +52,7 @@ func (parser *Parser) ParseString(line string) (entry *Entry, err error) {
 // returns parser for this format. It returns an error if cannot find the needle.
 func NewNginxParser(conf io.Reader, name string) (parser *Parser, err error) {
 	scanner := bufio.NewScanner(conf)
-	re := regexp.MustCompile(fmt.Sprintf(`^.*log_format\s+%v\s+(.+)\s*$`, name))
+	re := regexp.MustCompile(fmt.Sprintf(`^\s*log_format\s+%v\s+(.+)\s*$`, name))
 	found := false
 	var format string
 	for scanner.Scan() {

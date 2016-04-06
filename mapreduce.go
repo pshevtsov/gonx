@@ -2,6 +2,7 @@ package gonx
 
 import (
 	"bufio"
+	"bytes"
 	"io"
 	"sync"
 )
@@ -15,7 +16,7 @@ func handleError(err error) {
 // when result will be readed from reducer's output channel, but the mapper
 // works and fills input Entries channel until all lines will be read from
 // the fiven file.
-func MapReduce(file io.Reader, parser *Parser, reducer Reducer) chan *Entry {
+func MapReduce(file io.Reader, parser StringParser, reducer Reducer) chan *Entry {
 	// Input file lines. This channel is unbuffered to publish
 	// next line to handle only when previous is taken by mapper.
 	var lines = make(chan string)
@@ -72,17 +73,38 @@ func MapReduce(file io.Reader, parser *Parser, reducer Reducer) chan *Entry {
 	go reducer.Reduce(entries, output)
 
 	go func() {
-		scanner := bufio.NewScanner(file)
-		for scanner.Scan() {
+		reader := bufio.NewReader(file)
+		line, err := readLine(reader)
+		for err == nil {
 			// Read next line from the file and feed mapper routines.
-			lines <- scanner.Text()
+			lines <- line
+			line, err = readLine(reader)
 		}
 		close(lines)
 
-		if err := scanner.Err(); err != nil {
+		if err != nil && err != io.EOF {
 			handleError(err)
 		}
 	}()
 
 	return output
+}
+
+func readLine(reader *bufio.Reader) (string, error) {
+	line, isPrefix, err := reader.ReadLine()
+	if err != nil {
+		return "", err
+	}
+	if !isPrefix {
+		return string(line), nil
+	}
+	var buffer bytes.Buffer
+	_, err = buffer.Write(line)
+	for isPrefix && err == nil {
+		line, isPrefix, err = reader.ReadLine()
+		if err == nil {
+			_, err = buffer.Write(line)
+		}
+	}
+	return buffer.String(), err
 }
